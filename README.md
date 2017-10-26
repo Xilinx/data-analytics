@@ -17,9 +17,10 @@ This repository provides source code for big data acceleration on FPGA. In parti
 ### 2. ACCELERATION MODULES
 
 This repository includes the following acceleration modules that can be run on F1
+
 Directory    | Description
 -------------|----------------------------------------------------------------------------
-             | Postgres integrated TPCH Query 6 Acceleration
+xql6         | Postgres integrated TPCH Query 6 Acceleration
 tpch         | Text file table TPCH Query 6 and 1 Acceleration
 
 ### 4. DIRECTORY STRUCTURE
@@ -35,7 +36,7 @@ tpch         | Host code and Xilinx FPGA Kernel code to run Query 6 and Query 1 
 ## 7. OTHER INFORMATION
 
 For more information check here:
-[SDAccel User Guides][]
+[SDAccel User Guides](https://www.xilinx.com/support/documentation/sw_manuals/xilinx2017_1/ug1023-sdaccel-user-guide.pdf)
 
 ## 8. SUPPORT
 For questions and to get help on this project or your own projects, visit the [SDAccel Forums][].
