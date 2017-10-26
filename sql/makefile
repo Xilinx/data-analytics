@@ -95,6 +95,8 @@ host: ${HOST_EXE}
 lib: ${HOST_LIB}
 
 ${HOST_LIB}: ${LIBOBJECTS}
+	@echo "***** Compile library  *****"
+	mkdir -p $(BINDIR)
 	ar rvs $@ ${LIBOBJECTS}
 
 ${HOST_EXE}: ${OBJECTS}
@@ -111,4 +113,4 @@ $(OBJECTS): $(OBJDIR)/%.o : $(SRCDIR)/%.cpp ${HOST_INCS}
 cleanall: clean 
 
 clean:
-	${RM} ${HOST_EXE} ${OBJECTS} ${HOST_LIB}
+	rm -rf ${HOST_EXE} ${OBJECTS} ${HOST_LIB} ${BINDIR} ${OBJDIR}

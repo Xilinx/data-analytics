@@ -349,6 +349,4 @@ clean:
 	${RM} ${HOST_EXE} ${OBJECTS}
 
 cleanxbin:
-	${RM} -r ${XCLDIR}/*.xclbin _xocc*.dir .Xil/ *.xclbin *.xo sdaccel_profile_summary.* $(BINDIR)/emconfig.json
-
-
+	rm -rf ${XCLDIR}/*.xclbin _xocc*.dir .Xil/ *.xclbin *.xo sdaccel_profile_summary.* $(BINDIR)/emconfig.json dltmp* ${BINDIR} ${OBJDIR}

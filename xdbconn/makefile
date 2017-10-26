@@ -196,4 +196,4 @@ clean:
 	${RM} ${HOST_EXE} ${OBJECTS} ${HOST_LIB}
 
 cleanall: clean
-	${RM} -rf *.xo *.xclbin vivado* _xocc*.dir .Xil/ sdaccel_profile_summary.* $(BINDIR)/emconfig.json dltmp* bin obj 
+	rm -rf *.xo *.xclbin vivado* _xocc*.dir .Xil/ sdaccel_profile_summary.* $(BINDIR)/emconfig.json dltmp* ${BINDIR} ${OBJDIR}
