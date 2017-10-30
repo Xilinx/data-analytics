@@ -103,7 +103,7 @@ HOST_SRCS = src/sqlutils.cpp src/sqldate.cpp src/sqlq6procunit.cpp src/sqlq6tpch
 HOST_MAIN=1
 ifeq (${HOST_MAIN},1)
 	HOST_SRCS += src/q1main.cpp src/q6main.cpp src/main.cpp
-	HOST_EXE = $(BINDIR)/sqltpch
+	HOST_EXE = $(BINDIR)/xsqltpch
 else
 	HOST_SRCS += src/tbsqlunits.cpp
 	HOST_EXE = $(BINDIR)/tbsqlunits

@@ -61,7 +61,7 @@ HOST_INCS = src/sqldefs.h src/sqlutils.h src/sqldecimal.h src/sqldecimalutils.h 
 HOST_EXE = $(BINDIR)/tbsqlunits
 
 HOSTLIB_SRCS = src/sqlutils.cpp src/sqldate.cpp src/tbsqlunits.cpp
-HOST_LIB = $(BINDIR)/libsql.a
+HOST_LIB = $(BINDIR)/libxsqlutils.a
 
 ifeq (${HOST_CCOPT},DBG)
 	HOST_CCFLAGS = -g -DHLS_DEBUG
