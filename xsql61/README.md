@@ -8,6 +8,13 @@ This README file contains the following sections:
 
 ## 1. OVERVIEW
 This directory provides sample kernel implementation for Query 6 and Query 1 on TPCH data tables. It can be run on F1 instances to produce high quality TPCH results.
+Insightful real time analytics is becoming increasingly compute intensive as the data keeps growing. This results into massive compute node scaling, which are expensive and, sometimes infeasible. Xilinx FPGA platform and solutions can offer significantly better acceleration for compute offload by enabling a field customizable hardware implementation. In this design, we show a way to create a massively parallel processing architecture offering 20-30x better processing efficiency than CPUs. This architecture can be extended to implement different types of applications.
+
+### FPGA Kernel
+The kernel consists of multiple processing units connected in a modified SIMD (Single Instruction Multiple Data) architecture. Multiple PUs are sent data using a memory scheduler distributing the DDR bursts to each PU in a round robin fashion. When all PUs are done processing, a final merge operation is performed, and the result is sent to host code.
+
+### Host Code
+Host code reads text based tables and sends blocks of data using the data mover library, xdbconn. It maintains a circular queue deep enough to utilize the device DDR fully, and keep processing units from starving. It also merges the result from FPGA kernels to create the final result. Using this architecture, host can scale and process very large data sets.
 
 ## 2. DESIGN FILE HIERARCHY
 
