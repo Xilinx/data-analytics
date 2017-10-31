@@ -1,5 +1,5 @@
-Data analytics Acceerator Repository
-===========================
+Data analytics Accelerator Repository
+====================================
 
 Welcome to the Data Analytics repository. This repository contains the latest examples to get you started with application optimization targeting Xilinx PCIe FPGA acceleration boards. All examples are ready to be compiled and executed on boards hosted in the Amazon F1 clouds. The repository information is provided as below
 
@@ -21,16 +21,17 @@ This repository includes the following acceleration modules that can be run on F
 Directory    | Description
 -------------|----------------------------------------------------------------------------
 xql6         | Postgres integrated TPCH Query 6 Acceleration
-tpch         | Text file table TPCH Query 6 and 1 Acceleration
+xsql61       | Text file table TPCH Query 6 and 1 Acceleration
 
 ### 4. DIRECTORY STRUCTURE
 Each directory contains a makefile to build host code, library and Xilinx Kernel for target platforms. These are the directories and their functionalities.
 
 Directory    | Description
 -------------|----------------------------------------------------------------------------
+xsql6        | Postgres integrated TPCH Query 6 Acceleration
+xsql61       | Host code and Xilinx FPGA Kernel code to run Query 6 and Query 1 on FPGA
 xdbconn      | An API structure to move blocks of data from host to device using Xilinx SDx
-sql          | Sql library with functions to handle Sql data on FPGA
-tpch         | Host code and Xilinx FPGA Kernel code to run Query 6 and Query 1 on FPGA
+xsqlutils    | Sql library with functions to handle Sql data on FPGA
 
 
 ## 7. OTHER INFORMATION
