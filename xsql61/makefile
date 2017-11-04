@@ -48,7 +48,7 @@ all:
 endif
 # Set this linking with PostgreSQL or MyDataSQL using C-API. Default flow is using csv file.
 
-SQLTBL=../../db/tpch-master/dbgen/1/lineitem.tbl
+SQLTBL=aws/samplelineitem.tbl
 
 # only csv is supported. Make code/makefile change to support pgsql or mysql  see sqlhost.cpp
 DBMODE=csv
@@ -269,7 +269,7 @@ ifeq (${DBMODE},pgsql)
     HOST_INCS += src/sqlhost.cpp
     HOST_ARGS += -db pgsql -schema sf1g -sqlhost ${PGSERVER} -sqlport 5432
 else
-    HOST_ARGS += -db ${SQLTBL}
+    HOST_ARGS += -db ${SQLTBL} -ntuples 256
 endif
 
 OBJECTS := $(HOST_SRCS:$(SRCDIR)/%.cpp=$(OBJDIR)/%.o)

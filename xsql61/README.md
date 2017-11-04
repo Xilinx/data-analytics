@@ -5,6 +5,7 @@ This README file contains the following sections:
   1. OVERVIEW
   2. DESIGN FILE HIERARCHY  
   3. COMPILATION AND EXECUTION
+  4. SUPPORT AND OTHER INFORMATION
 
 ## 1. OVERVIEW
 This directory provides sample kernel implementation for Query 6 and Query 1 on TPCH data tables. It can be run on F1 instances to produce high quality TPCH results.
@@ -34,6 +35,12 @@ src/q6main.cpp        | Main code to execute query 6
 src/q1main.cpp        | Main code to execute query 1
 src/main.cpp          | Host code with main functions and the args
 
+AWS related Files            | Description
+-----------------------------|---------------------------------------------------------------------
+aws/sqlq1tpch_AWS_hw.xclbin  | Registered AFI image for Query 1 runs
+aws/sqlq6tpch_AWS_hw.xclbin  | Registered AFI image for Query 6 runs
+aws/samplelineitem.tbl       | Sample lineitem table
+
 
 ## 3. COMPILATION AND EXECUTION
 
@@ -42,65 +49,107 @@ Set up environment for Xilinx SDx release
 ```
 $source <SDX_INSTALL_DIR>/settings64.sh
 ```
-Make XDB connector library in database/xdbconn (see README for instructions)
-Build host code fo rtpch
+Make XDB connector library in ../xdbconn (see README in ../xdbconn on how to build libxdbconn)
+
+Build host code for tpch
 ```
-make
+make all XPART=AWS
 ```
+You can also build xclbin for different flows, including sw_emu, hw_emu and hw using make command.
+```
+make xbin FLOW=sw_emu QUERYNO=6
+```
+
+### Running example design on AWS F1
+
+We have created example AFI for Query 6 and Query 1.
+
+#### Query 6
+
+To check query 6 AFI ID availability, please do the following -
+```
+aws ec2 describe-fpga-images --fpga-image-ids afi-0118cc79e6c12ee83
+```
+The xclbin has been stored into AFI S3 image, and is ready to be executed on your F1 instance. To execute Query 6, please run the following command -
+```
+sudo sh
+source /opt/Xilinx/SDx/2017.1.rte/setup.sh
+bin/xsqltpch -hw -kernel sqlq6tpch -xclbin aws/sqlq6tpch_AWS_hw.xclbin  -query 6 -db aws/samplelineitem.tbl -ntuples 256
+```
+It generates sdaccel result files showing kernel, DDR and IO performances. 
+
+#### Query 1
+
+To check query 1 AFI ID availability, please do the following -
+```
+aws ec2 describe-fpga-images --fpga-image-ids afi-052c4dd898e6ce3bf
+```
+The xclbin has been stored into AFI S3 image, and is ready to be executed on your F1 instance. To execute Query 1, please run the following command -
+```
+sudo sh
+source /opt/Xilinx/SDx/2017.1.rte/setup.sh
+bin/xsqltpch -hw -kernel sqlq1tpch -xclbin aws/sqlq1tpch_AWS_hw.xclbin -query 1 -db aws/samplelineitem.tbl -ntuples 256
+```
+It generates sdaccel result files showing kernel, DDR and IO performances.
+
+You can also run this on TPCH 1GB table that produces result same as the one produced by PostgreSQL integrated query. You can get the 1gb_lineitem.tbl in Amazon Data-Analytics F1 AMI and run the design there by replacing -db argument.
+
+### Running TPCH Query tests using sw and hw flows
+
 Run TPCH query with the lineitem table csv file
 ```
 $make QUERYNO=6 DBMODE=csv run_sw_emu
 ```
-To run TPCH query with the lineitem table csv file
+To run TPCH query with the lineitem table csv file for hardware emulation
 ```
 $make QUERYNO=6 DBMODE=csv run_hw_emu
 ```
-Run TPCH query 6 using HLS C functions as OpenCL kernel on acceleration card
 
-Compile host code and xclbin for F1 hardware
-```
-$make host xbin
-```
-Here is a brief step by step instruction on how to run it on the AWS-F1 platform:
+## 4. SUPPORT AND OTHER INFORMATION
 
-* Building the executable by calling:
-```
-make all XPART=AWS
-```
-* Building the xclbin by calling:
-```
-make xbin FLOW=hw QUERYNO=6
-```
-Chnage queryno to 1 to create the xclbin for query 6
+There is more information available below to learn more about different flows on Amazon F1.
 
-### Amazon AWS F1 execution
+### Amazon AWS F1 Information
 
-You can learn more on these links [Amazon F1 hardware](https://aws.amazon.com/ec2/instance-types/f1), [Official AWS github](https://github.com/aws/aws-fpga) and [AWS FPGA Forums](https://forums.aws.amazon.com/forum.jspa?forumID=243&start=0)
+You can learn more about AWS F1 instance hardware at [Amazon F1 hardware](https://aws.amazon.com/ec2/instance-types/f1) AWS also provides an [Official AWS github](https://github.com/aws/aws-fpga) where information is provided on how to build and execute for Xilinx FPGA devices. [AWS FPGA Forums](https://forums.aws.amazon.com/forum.jspa?forumID=243&start=0) has discussions related to F1 development, and please feel free to participate.
 
-* Creating and registering the AFI
+### Creating FPGA binaries
+This design comes with a xilinx binary for AWS that can be run directly on F1 instance. It also has the xclbin that has been created by Xilinx tools. This 
 
-Please follow AWS instructions to create an AFI image for Amazon F1.
+### Amazon AWS F1 Information and Support
 
-* Check AFI registration:
+You can learn more about AWS F1 instance hardware at [Amazon F1 hardware](https://aws.amazon.com/ec2/instance-types/f1) site. AWS also provides an [Official AWS github](https://github.com/aws/aws-fpga), where information is provided on how to build and execute for Xilinx FPGA devices. [AWS FPGA Forums](https://forums.aws.amazon.com/forum.jspa?forumID=243&start=0) has discussions related to F1 development, and please feel free to participate.
+
+### SDAccel Information and Support
+
+This example uses SDAccel tools to generate F1 acceleration designs. 
+For more information check here: [SDAccel User Guides](https://www.xilinx.com/support/documentation/sw_manuals/xilinx2017_1/ug1023-sdaccel-user-guide.pdf)
+
+For questions and to get help on SDAccel visit the [SDAccel Forums](https://forums.xilinx.com/t5/SDAccel/bd-p/SDx).
+
+### AWS SDK Flow
+
+This design uses AWS SDK (Software Development Kit) Flow. Click here on [AWS SDK](https://github.com/aws/aws-fpga/tree/master/sdk) to learn about the required setup to build the binaries.
+
+This example comes with a pre-built xclbin for Xilinx F1 instance. Please follow README from github xsql61 files to create a new xclbin. 
+
+### AWS AFI Image
+
+This example comes with a pre-built AWS AFI image to run the sample design.
+
+You can follow the [AWS AFI generation](https://github.com/aws/aws-fpga/tree/master/hdk/cl/examples) steps to create an AFI from Xilinx binaries. 
+
+The command to generate an AFI image for the given binary looks like the following command. Pleas change the names and keys to run for your specific keys and binary names
+```
+$SDACCEL_DIR/tools/create_sdaccel_afi.sh -xclbin=sqlq1tpch_AWS_hw.xclbin -o=sqlq1tpch_AWS_hw.xilinx_aws-vu9p-f1_4ddr-xpr-2pr_4_0 -s3_bucket=aws-xlnx-f1-developer -s3_dcp_key=user@example.com/f1-dcp-folder/ -s3_logs_key=user@example.com/f1-logs/
+```
+
+Please ensure that the fpga image has a valid Amazon id. The instructions on these steps exist on AWS AFI generation page.
 
 ```
-more *afi_id.txt
-aws ec2 describe-fpga-images --fpga-image-ids <afi-id from file>
+aws ec2 describe-fpga-images --fpga-image-ids afi-your-afi-id
 ```
-* Setup and execute
 
-To run query 6 please use the following command 
-```
-sudo sh
-source /opt/Xilinx/SDx/2017.1.rte/setup.sh
-bin/xsqltpch -kernel sqlq6tpch -xclbin <replace_with_aws_xclbin_name>  -query 6 -db test/samplelineitem.tbl -ntuples 256"
-```
-To run query 1 please use the following command 
-```
-sudo sh
-source /opt/Xilinx/SDx/2017.1.rte/setup.sh
-bin/xsqltpch -kernel sqlq6tpch -xclbin <replace_with_aws_xclbin_name>  -query 1 -db test/samplelineitem.tbl -ntuples 256"
-```
 Please look at the options provided for bin/xsqltpch to run it in different modes. You can feed in larger lineitem.tbl generated by TPCH dbgen. This code has been checked with up to 100GB of data size, and it scales with the data design for TBytes of data sizes as well.
 
 
