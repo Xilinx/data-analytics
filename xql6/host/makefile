@@ -1,5 +1,5 @@
 XILINX_SDX=/proj/xbuilds/2017.1_sdx_1026_1/installs/lin64/SDx/2017.1/
-#XILINX_SDX=/opt/Xilinx/SDx/2017.1.op/
+#XILINX_SDX=/opt/Xilinx/SDx/2017.1.rte/
 CC = gcc
 PG_SERVER_INCS += -I $(shell pg_config --includedir) -I $(shell pg_config --includedir-server)
 CFLAGS += -O3 -fpic $(PG_SERVER_INCS)  -I${XILINX_SDX}/runtime/include/1_2
@@ -18,4 +18,8 @@ $(TARGET): $(OBJECTS1)
 
 clean:
 	$(RM) $(OBJECTS1) $(TARGET)
+
+# sudo make install
+install: $(TARGET)
+	cp $(TARGET) /usr/lib/postgresql/9.6/lib/.
 

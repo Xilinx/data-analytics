@@ -1,15 +1,8 @@
 //----------------------------------------------------------------------------
-// UDF to package tuple data for xql6-kernel
+// xql6: UDF to package tuple data for xql6-kernel
 // 2017-06-11 22:25:39 parik 
 //
-// Build in environment without SDX (x). Needs postgresql-server-dev-9.6
-//
-// Add LD_LIBRARY_PATH and XILINX_SDX to /etc/postgresql/9.6/main/environment
-// Eg:
-// LD_LIBRARY_PATH = '/proj/xbuilds/2016.4_sdx_0310_1/installs/lin64/SDx/2016.4/lib/lnx64.o:/proj/xbuilds/2016.4_sdx_0310_1/installs/lin64/SDx/2016.4/runtime/lib/x86_64'
-// XILINX_SDX = '/proj/xbuilds/2016.4_sdx_0310_1/installs/lin64/SDx/2016.4'
-//
-// Touch and og+w the log files
+// Touch and og+w the log files to get debug logs
 //----------------------------------------------------------------------------
 #include "postgres.h"
 #include "fmgr.h"
@@ -26,7 +19,6 @@
 #include "utils/builtins.h"
 #include "utils/pg_lsn.h"
 #include "utils/rel.h"
-//#include "utils/varlena.h"
 
 #include "access/relscan.h"
 #include "access/heapam.h"
@@ -37,26 +29,22 @@
 #include <string.h>
 #include <stdarg.h>
 #include <time.h>
-//#include <sys/time.h>
 #include "xql6.h"
 #include <CL/opencl.h>
 
 PG_MODULE_MAGIC;
 
-void xql6_build_state ();
-void xql6_reset_state ();
-void xql6_init (const char* krnlName);
-long xql6_run_hw (Relation rel);
-long xql6_run_sw (Relation rel);
-void xql6_end (Relation rel);
-bool xql6FillBlock (Relation rel, unsigned char *p_bufptr, long *p_nTups, 
-                    Xql6FillState *p_fillState);
+void xql6_init ();
+bool xql6_run_hw (Relation, char*, const char*);
+bool xql6_run_sw (Relation, char*);
+bool xql6_init_kernel (const char*, char*);
+bool xql6_stop_kernel (char*);
+bool xql6_check_relation (Relation rel);
 
-int xql6kernel_stop ();
-int xql6kernel_init (const char *krnlName);
+bool xql6FillBlock (Relation, unsigned char*, long*, Xql6FillState*);
+int xql6GetNextPage (Relation, unsigned char*, Xql6FillState*);
 
-// replacement for fn_extra
-static Xql6State *p_xql6state = NULL;
+static char* p_fpgaKernelName = NULL;
 
 //----------------------------------------------------------------------------
 extern unsigned char* pInp[10];
@@ -70,7 +58,7 @@ extern int end_fpga();
 
 //----------------------------------------------------------------------------
 // logging related. Create a writable file with this name to get debug logs
-static const char xql6Log[] = "/wrk/parik/sdaccel/pgdb/xql6/v4/xql6.log";
+static const char xql6Log[] = "/tmp/xql6.log";
 static FILE *hlogFile = NULL;
 void hlog (const char* fmt, ...)
 {
@@ -107,33 +95,76 @@ PG_FUNCTION_INFO_V1 (xql6);
 Datum xql6 (PG_FUNCTION_ARGS)
 {
   text *relname = PG_GETARG_TEXT_PP(0);
-  //uint32    blkno = PG_GETARG_UINT32(1);
 
-  const char* relname_str = text_to_cstring (PG_GETARG_TEXT_PP (0));
-  const char* krnlname = text_to_cstring (PG_GETARG_TEXT_PP (1));
+  const char* p_relName = text_to_cstring (PG_GETARG_TEXT_PP (0));
+  const char* p_krnName = text_to_cstring (PG_GETARG_TEXT_PP (1));
 
-  if (!hlogFile) hlogFile = fopen (xql6Log, "w"); 
-  hlog ("start relname %s krnlname %s\n", relname_str, krnlname); 
+  char sBuf[1024] = "";
 
   RangeVar *relrv = makeRangeVarFromNameList (textToQualifiedNameList(relname));
   Relation rel = relation_openrv (relrv, AccessShareLock);
 
+  if (!xql6_check_relation (rel)) {
+    sprintf (sBuf, "xql6 cannot use the relation %s\n", p_relName);
+  } else {
+
+    xql6_init ();
+
+    if (strncmp (p_krnName, "stop", 4) == 0) {
+      xql6_stop_kernel (sBuf);
+    } else if (strncmp (p_krnName, "swemu", 5) == 0) {
+      xql6_run_sw (rel, sBuf);
+    } else {
+      xql6_run_hw (rel, sBuf, p_krnName);
+    }
+  }
+
+  relation_close(rel, AccessShareLock);
+  char *result = pstrdup (sBuf);
+
+  hlog ("xql6 done\n");
+  if (hlogFile) {fclose (hlogFile); hlogFile = NULL; }
+
+  PG_RETURN_CSTRING (result);
+}
+
+void xql6_init ()
+{
+  int eno;
+  if (!hlogFile) {
+    hlogFile = fopen (xql6Log, "w"); eno = errno;
+  }
+  //hlog ("Start Rel %s kernel name %s\n", p_relName, krnlName); 
+}
+
+bool xql6_check_relation (Relation rel)
+{
+  bool retVal = true;
+
   /* Check that this relation has storage */
-  if (rel->rd_rel->relkind == RELKIND_VIEW)
+  if (rel->rd_rel->relkind == RELKIND_VIEW) {
     ereport(ERROR,
         (errcode(ERRCODE_WRONG_OBJECT_TYPE),
          errmsg("cannot get raw page from view \"%s\"",
             RelationGetRelationName(rel))));
-  if (rel->rd_rel->relkind == RELKIND_COMPOSITE_TYPE)
+    retVal = false;
+  }
+
+  if (rel->rd_rel->relkind == RELKIND_COMPOSITE_TYPE) {
     ereport(ERROR,
         (errcode(ERRCODE_WRONG_OBJECT_TYPE),
          errmsg("cannot get raw page from composite type \"%s\"",
             RelationGetRelationName(rel))));
-  if (rel->rd_rel->relkind == RELKIND_FOREIGN_TABLE)
+    retVal = false;
+  }
+
+  if (rel->rd_rel->relkind == RELKIND_FOREIGN_TABLE) {
     ereport(ERROR,
         (errcode(ERRCODE_WRONG_OBJECT_TYPE),
          errmsg("cannot get raw page from foreign table \"%s\"",
             RelationGetRelationName(rel))));
+    retVal = false;
+  }
 
   /* not supported?
   if (rel->rd_rel->relkind == RELKIND_PARTITIONED_TABLE)
@@ -143,104 +174,25 @@ Datum xql6 (PG_FUNCTION_ARGS)
             RelationGetRelationName(rel))));
   */
 
-  char sBuf[1024] = "";
-  sprintf (sBuf, "Rel %s has %d blocks. ", 
-    RelationGetRelationName (rel), 
-    RelationGetNumberOfBlocksInFork (rel, MAIN_FORKNUM));
-
-  if (strncmp (krnlname, "stop", 4) == 0) {
-    int status = xql6kernel_stop ();
-    sprintf (sBuf, "\nKernel Stopped. Status %d\n", status);
-    if (hlogFile) {
-      fclose (hlogFile); hlogFile = NULL;
-    }
-
-  } else {
-    char sTmp[1024];
-    struct timespec tBeg, tEnd;
-
-    sTmp[0] = '\0';
-    clock_gettime (CLOCK_REALTIME, &tBeg);
-    xql6_init (krnlname);
-    clock_gettime (CLOCK_REALTIME, &tEnd);
-    sprintf (sTmp, "\nxql6_init %ld ns\n", diffTime (&tBeg, &tEnd));
-    strcat (sBuf, sTmp);
-
-    sTmp[0] = '\0';
-    long res=0;
-    clock_gettime (CLOCK_REALTIME, &tBeg);
-    if (p_xql6state-> runMode == XQL6_HW) {
-      res = xql6_run_hw (rel);
-    } else if (p_xql6state-> runMode == XQL6_SW) {
-      res = xql6_run_sw (rel);
-    }
-    clock_gettime (CLOCK_REALTIME, &tEnd);
-    sprintf (sTmp, "\nxql6_run result %ld %ld ns\n", res, diffTime (&tBeg, &tEnd));
-    strcat (sBuf, sTmp);
-    hlog ("xql6_run done. Time %ld ns\n", diffTime (&tBeg, &tEnd));
-
-    sTmp[0] = '\0';
-    clock_gettime (CLOCK_REALTIME, &tBeg);
-    xql6_end (rel);
-    clock_gettime (CLOCK_REALTIME, &tEnd);
-    sprintf (sTmp, "\nxql6_end %ld ns\n", diffTime (&tBeg, &tEnd));
-    strcat (sBuf, sTmp);
-  }
-
-  hlog ("xql6_end done\n");
-
-  relation_close(rel, AccessShareLock);
-
-  char *result = pstrdup (sBuf);
-
-  if (hlogFile) {fclose (hlogFile); hlogFile = NULL; }
-
-  PG_RETURN_CSTRING (result);
+  return retVal;
 }
 
-void xql6_init (const char* krnlName)
+bool xql6_run_hw (Relation rel, char* p_sBuf, const char* p_krnName)
 {
-  hlog ("xql6_init kernel %s\n", krnlName);
-
-  xql6_build_state ();
-
-  if (strncmp (krnlName, "swemu", 5) == 0) {
-    p_xql6state-> runMode = XQL6_SW;
-    hlog ("xql6_init init-ed sw-sim mode");
-    return;
-  } 
-  
-  // hw kernel. Init if first time. Stop and re-init if kernel changed
-  if (p_xql6state-> fpgaInitPassed && 
-      strcmp (p_xql6state-> fpgaKernelName, krnlName) != 0) 
-  {
-    hlog ("xql6_init stopping current hw kernel %s\n", p_xql6state-> fpgaKernelName);
-    int stopStatus = xql6kernel_stop ();
-    if (stopStatus != EXIT_SUCCESS) {
-      hlog ("xql6_init xql6kernel_stop failed status %d\n", stopStatus);
-      return;
+  if (p_fpgaKernelName && strcmp (p_fpgaKernelName, p_krnName) != 0) {
+    // new kernel and old one exists. stop old
+    if (!xql6_stop_kernel (p_sBuf)) {
+      return false;
     }
   }
 
-  if (xql6kernel_init (krnlName) != EXIT_SUCCESS) {
-    hlog ("xql6_init failed\n");
-    return;
+  if (!p_fpgaKernelName) {
+    if (!xql6_init_kernel (p_krnName, p_sBuf)) {
+      return false;
+    }
   }
 
-  p_xql6state-> fpgaInitPassed = true;
-  p_xql6state-> fpgaKernelName = strdup (krnlName);
-  p_xql6state-> runMode = XQL6_HW;
-
-  hlog ("xql6_init passed\n");
-}
-
-long xql6_run_hw (Relation rel)
-{
-  if (! p_xql6state-> fpgaInitPassed) return 0;
-
-  long q6_sum = 0;
-  long nTups = 0;
-
+  long q6_sum = 0, nTups = 0;
   int nBlks = RelationGetNumberOfBlocksInFork (rel, MAIN_FORKNUM);
 
   Xql6FillState xql6FillState;
@@ -256,6 +208,7 @@ long xql6_run_hw (Relation rel)
 
   bool bRealPages = true;
   int blkId, blkIdDone=0;
+  int status = EXIT_SUCCESS;
 
   for (blkId=0; bRealPages; ++blkId) {
 
@@ -292,11 +245,14 @@ long xql6_run_hw (Relation rel)
 
     // process new data
     clock_gettime (CLOCK_REALTIME, &tBeg);
-    int status = fpga_q6_enq_compute (blkId%10);
+    status = fpga_q6_enq_compute (blkId%10);
     clock_gettime (CLOCK_REALTIME, &tEnd);
     tC += diffTime (&tBeg, &tEnd);
 
-    if (status != EXIT_SUCCESS) break;
+    if (status != EXIT_SUCCESS){
+      hlog ("enque failed for blk %d\n", blkId);
+      break;
+    }
   }
 
   // wait for remaining enques to complete
@@ -320,63 +276,120 @@ long xql6_run_hw (Relation rel)
   hlog ("xql6_run: result %ld.%d\n", q6_sum/(100*100), q6_sum%(100*100));
   hlog ("xql6_run: Runtimes: Fill %ld, W+Comp %ld Read %ld Total %ld\n", tF, tC, tR, tT);
 
-  p_xql6state-> numTups = nTups;
-  p_xql6state-> numCalls += 1;
+  char sTmp[1024];
+  if (status == EXIT_SUCCESS) {
+    sprintf (sTmp, "xql6_run (hw) result %ld.%ld\n"
+      "Runtimes (us) Fill %ld, W+Comp %ld, Rd %ld, Tot %ld. #Tups %ld\n", 
+      q6_sum/(100*100), q6_sum%(100*100), tF/1000, tC/1000, tR/1000, tT/1000, nTups);
+  } else {
+    sprintf (sTmp, "xql6_run failed enque-compute\n");
+  }
+  strcat (p_sBuf, sTmp);
 
-  return q6_sum;
+  return status == EXIT_SUCCESS;
 }
 
-long xql6_run_sw (Relation rel)
+bool xql6_run_sw (Relation rel, char* p_sBuf)
 {
   int nBlks = RelationGetNumberOfBlocksInFork (rel, MAIN_FORKNUM);
-  unsigned char *xql6_blk = (unsigned char*) palloc (XQL6_BLK_SZ);
+  unsigned char *p_xql6_blk = (unsigned char*) palloc (XQL6_BLK_SZ);
 
   Xql6FillState xql6FillState;
-  xql6FillState. nBlks = nBlks;
-  xql6FillState. blkNum = 0;
-  xql6FillState. linNum = 0;
+  xql6FillState. nBlks = nBlks; xql6FillState. blkNum = 0; xql6FillState. linNum = 0;
 
   hlog ("\nxql6_run start. nBlks %d\n", nBlks);
 
-  int nFB=0;
-  long q6_sum = 0;
-  long nTups = 0;
+  long nFB=0, q6_sum = 0, nTups = 0, tF=0, tC=0;
   struct timespec tBeg, tEnd;
-  long timeFill=0, timeEnq=0;
 
   bool bRealPages = true;
   while (bRealPages) {
 
     clock_gettime (CLOCK_REALTIME, &tBeg);
-    bRealPages = xql6FillBlock (rel, xql6_blk, &nTups, &xql6FillState);
+    bRealPages = xql6FillBlock (rel, p_xql6_blk, &nTups, &xql6FillState);
     clock_gettime (CLOCK_REALTIME, &tEnd);
-    timeFill += diffTime (&tBeg, &tEnd);
+    tF += diffTime (&tBeg, &tEnd);
 
     clock_gettime (CLOCK_REALTIME, &tBeg);
-    q6_sum += q6_swemu (xql6_blk);
+    q6_sum += q6_swemu (p_xql6_blk);
     clock_gettime (CLOCK_REALTIME, &tEnd);
-    timeEnq += diffTime (&tBeg, &tEnd);
+    tC += diffTime (&tBeg, &tEnd);
     ++nFB;
 
     hlog ("q6_sum %ld\n", q6_sum);
   }
 
-  //clock_gettime (CLOCK_REALTIME, &tBeg);
-  //bRealPages = xql6FillBlock (rel, xql6_blk, &nTups, &xql6FillState);
-  //clock_gettime (CLOCK_REALTIME, &tEnd);
-  //timeFill += diffTime (&tBeg, &tEnd);
-  //hlog ("xql6FillBlock %ld ns\n", tf);
-
-  pfree (xql6_blk);
-
-  p_xql6state-> numTups = nTups;
+  pfree (p_xql6_blk);
 
   hlog ("xql6_run. nFB %d, nTups %ld\n", nFB, nTups);
-  hlog ("xql6_run: Fill %ld, Enq %ld\n", timeFill, timeEnq);
+  hlog ("xql6_run: Fill %ld, Enq %ld\n", tF, tC);
+  
+  sprintf (p_sBuf, "xql6_run (sw) result %ld.%ld\n"
+    "Runtimes (us) Fill %ld, Comp %ld. #Tups %ld", 
+      q6_sum/(100*100), q6_sum%(100*100), tF/1000, tC/1000, nTups);
 
-  return q6_sum;
+  return true;
 }
 
+//----------------------------------------------------------------------------
+// Kernel management routines
+//----------------------------------------------------------------------------
+bool xql6_init_kernel (const char *p_krnlName, char* p_sBuf)
+{
+  if (p_fpgaKernelName) { 
+    hlog ("xql6_init_kernel found running kernel %s\n", p_fpgaKernelName);
+    return false; 
+  }
+
+  struct timespec tBeg, tEnd;
+
+  clock_gettime (CLOCK_REALTIME, &tBeg);
+  int status = start_fpga (p_krnlName);
+  clock_gettime (CLOCK_REALTIME, &tEnd);
+  hlog ("xql6_init_kernel %s status %d\n", p_krnlName, status);
+
+  char sTmp[1024];
+  if (status != EXIT_SUCCESS) {
+    sprintf (sTmp, "Failed to start kernel %s, Status %d, Time %ld us\n", 
+             p_krnlName, status, diffTime (&tBeg, &tEnd)/1000);
+    strcat (p_sBuf, sTmp);
+    return false;
+  } else {
+    sprintf (sTmp, "xql6 init (fpga config) %ld us\n", diffTime (&tBeg, &tEnd)/1000);
+    strcat (p_sBuf, sTmp);
+    p_fpgaKernelName = strdup (p_krnlName);
+    return true;
+  }
+}
+
+bool xql6_stop_kernel (char* p_sBuf)
+{
+  char sTmp[1024];
+  if (! p_fpgaKernelName) {
+    sprintf (sTmp, "No running kernel. ");
+    strcat (p_sBuf, sTmp);
+    return true;
+  }
+
+  int status = end_fpga ();
+  hlog ("xql6_stop_kernel status %d\n", status);
+
+  if (status == EXIT_SUCCESS) {
+    sprintf (sTmp, "Stopped kernel %s\n", p_fpgaKernelName);
+    strcat (p_sBuf, sTmp);
+  } else {
+    sprintf (sTmp, "Failed to stop kernel %s status %d\n", p_fpgaKernelName, status);
+    strcat (p_sBuf, sTmp);
+  }
+
+  free (p_fpgaKernelName);
+  p_fpgaKernelName = NULL;
+  return status == EXIT_SUCCESS;
+}
+
+//----------------------------------------------------------------------------
+// Routines to move data from PG to OCL buffers
+//----------------------------------------------------------------------------
 bool xql6FillBlock (Relation rel, unsigned char *p_bufptr, long *p_nTups,
                     Xql6FillState *p_fillState)
 {
@@ -389,11 +402,7 @@ bool xql6FillBlock (Relation rel, unsigned char *p_bufptr, long *p_nTups,
     *p_nTups += pgTups;
 
     p_bufptr += XQL_PAGE_SZ;
-
-    //hlog ("xql6FillBlock. page %d, real %d tups %d\n", pgNum, bRealPages, pgTups); 
   }
-
-  //hlog ("xql6FillBlock done. %d pages, %ld tups\n", pgNum, *p_nTups);
 
   return bRealPages;
 }
@@ -416,8 +425,6 @@ int xql6GetNextPage (Relation rel, unsigned char* p_buf, Xql6FillState *p_fillSt
 
     Page page = (Page) BufferGetPage (buf);
     int nLines = PageGetMaxOffsetNumber (page);
-
-    //hlog ("blkNum %d, nLines %d, pfsLinNum %d\n", blkNum, nLines, p_fillState-> linNum);
 
     linNum = p_fillState-> linNum;
     p_fillState-> linNum = 0;
@@ -465,65 +472,7 @@ int xql6GetNextPage (Relation rel, unsigned char* p_buf, Xql6FillState *p_fillSt
   p_fillState-> blkNum = blkNum;
   p_fillState-> linNum = linNum;
 
-  //hlog ("xql6GetNextPage blkNum %d linNum %d\n", blkNum, linNum);
-
   return nTups;
 }
 
-void xql6_end (Relation rel)
-{
-  // nothing for now
-}
 
-int xql6kernel_init (const char *krnlName)
-{
-  hlog ("xql6kernel_init: starting fpga...\n");
-  int status = start_fpga (krnlName);
-
-  if (status != EXIT_SUCCESS) {
-    hlog ("xql6kernel_init: start_fpga Failed.\n");
-    p_xql6state-> runMode = XQL6_SW;
-    return 0;
-  }
-  return status;
-}
-
-int xql6kernel_stop ()
-{
-  int retVal = EXIT_SUCCESS;
-  hlog ("xql6kernel_stop...\n");
-
-  if (p_xql6state-> runMode == XQL6_HW) {
-    retVal = end_fpga ();
-    hlog ("end_fpga status %d\n", retVal);
-  }
-
-  xql6_reset_state ();
-
-  hlog ("xql6kernel_stop.\nEOF\n");
-
-  return retVal;
-}
-
-void xql6_build_state ()
-{
-  if (p_xql6state) return;
-
-  p_xql6state = malloc (sizeof (Xql6State));
-  p_xql6state-> fpgaKernelName = NULL;
-  xql6_reset_state ();
-}
-
-void xql6_reset_state ()
-{
-  if (p_xql6state-> fpgaKernelName) {
-    free (p_xql6state-> fpgaKernelName);
-  }
-
-  p_xql6state-> fpgaKernelName = NULL;
-  p_xql6state-> fpgaInitPassed = false;
-  p_xql6state-> numCalls = 0;
-  p_xql6state-> numTups = 0;
-  p_xql6state-> runMode = XQL6_SW;
-
-}

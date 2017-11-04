@@ -185,6 +185,17 @@ int open_fpga (cl_context *context, cl_command_queue *commands, cl_program *prog
   char cl_platform_vendor[1001];
   char cl_platform_name[1001];
 
+  // Load binary from disk
+  unsigned char *kernelbinary;
+
+  hlog("loading %s\n", xclbin);
+  int n_i = load_file_to_memory(xclbin, (char **) &kernelbinary);
+  if (n_i < 0) {
+    hlog("failed to load kernel from xclbin: %s\n", xclbin);
+    hlog("ERROR: Test failed\n");
+    return EXIT_FAILURE;
+  }
+
   // Connect to first platform
   //
   int err = clGetPlatformIDs(1,&platform_id,NULL);
@@ -249,16 +260,6 @@ int open_fpga (cl_context *context, cl_command_queue *commands, cl_program *prog
 
   int status;
 
-  // Load binary from disk
-  unsigned char *kernelbinary;
-
-  hlog("loading %s\n", xclbin);
-  int n_i = load_file_to_memory(xclbin, (char **) &kernelbinary);
-  if (n_i < 0) {
-    hlog("failed to load kernel from xclbin: %s\n", xclbin);
-    hlog("ERROR: Test failed\n");
-    return EXIT_FAILURE;
-  }
   size_t n = n_i;
   // Create the compute program from offline
   *program = clCreateProgramWithBinary(*context, 1, &device_id, &n,

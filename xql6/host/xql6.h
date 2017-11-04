@@ -7,16 +7,6 @@
 #define _XQL6_H__
 #include <stdbool.h>
 
-enum Xql6RunMode {XQL6_SW, XQL6_HW };
-
-typedef struct Xql6State {
-  int numCalls;
-  long numTups;
-  bool fpgaInitPassed;
-  char* fpgaKernelName;
-  enum Xql6RunMode runMode;
-} Xql6State;
-
 typedef struct Xql6FillState {
   int blkNum;
   int nBlks;
