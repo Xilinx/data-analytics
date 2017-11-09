@@ -40,8 +40,8 @@ THIS COPYRIGHT NOTICE AND DISCLAIMER MUST BE RETAINED AS PART OF THIS FILE AT
 ALL TIMES.
 
 *******************************************************************************/
-#ifndef SQL_SQLUTILS_H
-#define SQL_SQLUTILS_H
+#ifndef XSQLUTILS_SQLUTILS_H
+#define XSQLUTILS_SQLUTILS_H
 
 #include "xdbutils.h"
 #include "sqldecimal.h"

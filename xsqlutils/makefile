@@ -56,11 +56,11 @@ SRCDIR   = src
 OBJDIR   = obj
 BINDIR   = bin
 
-HOST_SRCS = src/sqlutils.cpp src/sqldate.cpp src/tbsqlunits.cpp
-HOST_INCS = src/sqldefs.h src/sqlutils.h src/sqldecimal.h src/sqldecimalutils.h src/sqldate.h
+HOST_SRCS = src/sqlutils.cpp src/sqldate.cpp src/xpgdate.cpp src/xsqlcmd.cpp src/tbsqlunits.cpp
+HOST_INCS = src/sqldefs.h src/sqlutils.h src/sqldecimal.h src/sqldecimalutils.h src/xsqlcmd.h src/sqldate.h src/xpgdate.h
 HOST_EXE = $(BINDIR)/tbsqlunits
 
-HOSTLIB_SRCS = src/sqlutils.cpp src/sqldate.cpp src/tbsqlunits.cpp
+HOSTLIB_SRCS = src/sqlutils.cpp src/sqldate.cpp src/xpgdate.cpp src/xsqlcmd.cpp
 HOST_LIB = $(BINDIR)/libxsqlutils.a
 
 ifeq (${HOST_CCOPT},DBG)

@@ -40,8 +40,8 @@ THIS COPYRIGHT NOTICE AND DISCLAIMER MUST BE RETAINED AS PART OF THIS FILE AT
 ALL TIMES.
 
 *******************************************************************************/
-#ifndef SQL_SQLDECIMAL_H
-#define SQL_SQLDECIMAL_H
+#ifndef XSQLUTILS_SQLDECIMAL_H
+#define XSQLUTILS_SQLDECIMAL_H
 
 #include <ap_fixed.h>
 #include "sqldefs.h"

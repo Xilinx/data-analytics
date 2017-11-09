@@ -40,8 +40,8 @@ THIS COPYRIGHT NOTICE AND DISCLAIMER MUST BE RETAINED AS PART OF THIS FILE AT
 ALL TIMES.
 
 *******************************************************************************/
-#ifndef SQL_SQLDATE_H
-#define SQL_SQLDATE_H
+#ifndef XSQLUTILS_SQLDATE_H
+#define XSQLUTILS_SQLDATE_H
 
 #include "ap_int.h"
 #include "sqldefs.h"
@@ -62,6 +62,5 @@ struct SqlDate {
   Day   day;   // 1-31
   
 };
-
 
 #endif

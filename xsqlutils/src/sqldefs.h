@@ -41,8 +41,8 @@ ALL TIMES.
 
 *******************************************************************************/
 
-#ifndef SQL_SQLDEFS_H
-#define SQL_SQLDEFS_H
+#ifndef XSQLUTILS_SQLDEFS_H
+#define XSQLUTILS_SQLDEFS_H
 #include <ap_int.h>
 #include <hls_stream.h>
 

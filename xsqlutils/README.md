@@ -16,6 +16,8 @@ Files               | Description
 src/sqldecimal.h    | Templated function library to create Sql Decimal using AP_FIXED of Xilinx HLS
 src/sqldate.cpp     | Sqldate library to handle SQL data formats directly into the FPGA logic
 src/sqlutils.cpp    | SQL Utility functions
+src/xsqlcmd.cpp     | Opcodes to get setup buffers for SQL scan/query on Xilinx scanaggr kernel
+src/xpgdate.cpp     | Convert a date to postgres style Julian integers
 src/sqldefs.h       | Defines used in SQL library implementations
 src/tbsqlutils.cpp  | Unit test bench for SQL utility library
 
