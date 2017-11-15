@@ -43,6 +43,8 @@ else ifeq (${XPART},KU115)
 	XDEVICE=xilinx:xil-accel-rd-ku115:4ddr-xpr:4.0
 else ifeq (${XPART},VU9P)
 	XDEVICE=xilinx:xil-accel-rd-vu9p:4ddr-xpr:4.1
+else ifeq (${XPART},VCU1525)
+	XDEVICE=xilinx:vcu1525:4ddr-xpr:4.2
 else ifeq (${XPART},AWS)
 	XDEVICE=xilinx:aws-vu9p-f1:4ddr-xpr-2pr:4.0
 endif

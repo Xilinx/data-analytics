@@ -1,30 +1,19 @@
 /**********
-Copyright (c) 2017, Xilinx, Inc.
-All rights reserved.
 
-Redistribution and use in source and binary forms, with or without modification,
-are permitted provided that the following conditions are met:
+Copyright 2017 Xilinx, Inc.
 
-1. Redistributions of source code must retain the above copyright notice,
-this list of conditions and the following disclaimer.
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
 
-2. Redistributions in binary form must reproduce the above copyright notice,
-this list of conditions and the following disclaimer in the documentation
-and/or other materials provided with the distribution.
+http://www.apache.org/licenses/LICENSE-2.0
 
-3. Neither the name of the copyright holder nor the names of its contributors
-may be used to endorse or promote products derived from this software
-without specific prior written permission.
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
 
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
-ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
-THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
-IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
-INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
-PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
-HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
-OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
-EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 **********/
 
 #ifndef XSQLUTILS_XSQLCMD_H
@@ -55,13 +44,16 @@ class XSqlCmd  {
 
   struct Ops {
     std::string op;
-    bool ldop;
+    // 0 is not valid, 1 for LD, 2 none so far, 3 for comparisons , 4 for MULT/ADD    
+    int opRegs; 
     std::string lReg;
     long lRegId;
     std::string rReg;
     long rRegId;
     std::string fReg;
     long fRegId;
+    std::string cReg;
+    long cRegId;
     
     inline bool operator == (Ops const& rhs) const {
       bool eq = true;
@@ -71,13 +63,15 @@ class XSqlCmd  {
       else if (rReg.compare(rhs.rReg) != 0) eq = false;
       else if (rRegId != rhs.rRegId)  eq = false;
       else if (fReg.compare(rhs.fReg) != 0) eq = false;
-      else if (fRegId != rhs.fRegId)  eq = false;      
-      else if (ldop != rhs.ldop ) eq = false;
+      else if (fRegId != rhs.fRegId)  eq = false;
+      else if (cReg.compare(rhs.cReg) != 0) eq = false;
+      else if (cRegId != rhs.cRegId)  eq = false;            
+      else if (opRegs != rhs.opRegs ) eq = false;
       return eq;
     }
     
     inline size_t hashKey() const {
-      return (op.length()+lReg.length()+lRegId+rReg.length()+rRegId+fReg.length()+fRegId);
+      return (op.length()+lReg.length()+lRegId+rReg.length()+rRegId+fReg.length()+fRegId+cReg.length()+cRegId);
     }
     
   };
@@ -114,6 +108,7 @@ class XSqlCmd  {
   FILE *mFqry;
   
   void insertCmd(std::string& op, std::string& lop, std::string& rop, std::string& reg);
+  void insertCmd(std::string& op, std::string& cop, std::string& lop, std::string& rop, std::string& res);
   void splitRegId(std::string& str, std::string& reg, long& regId);
   long getDefVal(std::string& str);
   std::unordered_map<std::string, long> mDefs;

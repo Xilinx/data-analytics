@@ -1,30 +1,19 @@
 /**********
-Copyright (c) 2017, Xilinx, Inc.
-All rights reserved.
 
-Redistribution and use in source and binary forms, with or without modification,
-are permitted provided that the following conditions are met:
+Copyright 2017 Xilinx, Inc.
 
-1. Redistributions of source code must retain the above copyright notice,
-this list of conditions and the following disclaimer.
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
 
-2. Redistributions in binary form must reproduce the above copyright notice,
-this list of conditions and the following disclaimer in the documentation
-and/or other materials provided with the distribution.
+http://www.apache.org/licenses/LICENSE-2.0
 
-3. Neither the name of the copyright holder nor the names of its contributors
-may be used to endorse or promote products derived from this software
-without specific prior written permission.
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
 
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
-ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
-THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
-IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
-INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
-PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
-HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
-OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
-EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 **********/
 #include <algorithm>
 #include <cctype>
@@ -112,7 +101,18 @@ void XSqlCmd::insertKeys(std::string kstr, std::string val) {
 void XSqlCmd::insertCmd(std::string& op, std::string& lop, std::string& rop, std::string& res) {
   Ops ops;
   ops.op = op;
-  ops.ldop = false;
+  ops.opRegs = 3;
+  splitRegId(lop,ops.lReg,ops.lRegId);
+  splitRegId(rop,ops.rReg,ops.rRegId);
+  splitRegId(res,ops.fReg,ops.fRegId);    
+  mOps.push_back(ops);
+}
+
+void XSqlCmd::insertCmd(std::string& op, std::string& cop, std::string& lop, std::string& rop, std::string& res) {
+  Ops ops;
+  ops.op = op;
+  ops.opRegs = 4;
+  splitRegId(cop,ops.cReg,ops.cRegId);  
   splitRegId(lop,ops.lReg,ops.lRegId);
   splitRegId(rop,ops.rReg,ops.rRegId);
   splitRegId(res,ops.fReg,ops.fRegId);    
@@ -149,7 +149,8 @@ void XSqlCmd::scanLine() {
   if (stk[0][0] == '#') return ;
   if (stk[0] == "def") {
     if (stk.size() != 3) {
-      std::cout << "Incorrect def: " << mItem << std::endl;
+      std::cout << "Error: Incorrect def: " << mItem << std::endl;
+      mErr = true;
       return;
     }
     std::stringstream ssd(stk[2]);
@@ -174,15 +175,18 @@ void XSqlCmd::scanLine() {
       ops.op = stk[0];
       ops.fRegId = getDefVal(stk[2]);
       splitRegId(stk[1],ops.lReg,ops.lRegId);	  
-      ops.ldop = true;
+      ops.opRegs = 1;
       mOps.push_back(ops);
     }
   } else if (stk.size() == 4) {
     insertCmd(stk[0],stk[1],stk[2],stk[3]);
+  } else if (stk.size() == 5) {
+    insertCmd(stk[0],stk[1],stk[2],stk[3],stk[4]);
   } else if (stk.size() == 2) { // Allow other definitions for cols, delimiters etc
     insertKeys(stk[0],stk[1]);
   } else {
-    std::cout << "Incorrect OP:  " << mItem << std::endl;
+    std::cout << "Error: Incorrect OP:  " << mItem << std::endl;
+    mErr = true;    
     return;
   }
 }
@@ -191,10 +195,17 @@ void XSqlCmd::print() {
   for (auto itr = mDefs.begin(); itr != mDefs.end(); itr++)
     std::cout << "def " << itr->first << " " << itr->second << std::endl;
   for (auto itr = mOps.begin(); itr != mOps.end(); itr++) {
-    std::cout << itr->op << " " << itr->lReg << ":" << itr->lRegId << " ";
-    if (itr->ldop) {
-      std::cout << itr->fRegId << std::endl;      
-    } else {
+    if (itr->opRegs == 1) {
+      std::cout << itr->op << " " << itr->lReg << ":" << itr->lRegId << " ";
+      std::cout << itr->fRegId << std::endl;
+    } else if (itr->opRegs == 3) {
+      std::cout << itr->op << " " << itr->lReg << ":" << itr->lRegId << " ";      
+      std::cout << itr->rReg << ":" << itr->rRegId << " ";
+      std::cout << itr->fReg << ":" << itr->fRegId << std::endl;
+    } else if (itr->opRegs == 4) {
+      std::cout << itr->op << " " ;
+      std::cout << itr->cReg << ":" << itr->cRegId << " ";
+      std::cout << itr->lReg << ":" << itr->lRegId << " ";      
       std::cout << itr->rReg << ":" << itr->rRegId << " ";
       std::cout << itr->fReg << ":" << itr->fRegId << std::endl;
     }
