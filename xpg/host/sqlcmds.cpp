@@ -11,10 +11,6 @@ See the License for the specific language governing permissions and
 limitations under the License.
 **********/
 /* sql6_demo.cpp generates input of FPGA kernel interface
- * Author: hanhui 
- * Email: junrui.zjr@alibaba-inc.com
- * HK Verma
- * Email: hare@xilinx.com
  * Fixes - 
  *    Fixed aggegration rules
  *    For now using text based headers, added const numbers, expr numbers, aggr nos inthe header
