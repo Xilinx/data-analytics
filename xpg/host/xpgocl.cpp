@@ -375,8 +375,7 @@ int processQuerySwEmu(XdbConn **xdbConns, int kernels,
   XdbTimer timer;
   bool isFirstBlk = fpgaTaskState->send_state.is_first_blk;
   if(isFirstBlk==true) {
-    isFirstBlk = false;
-
+	fpgaTaskState->send_state.is_first_blk = false;
     //char *tbInbuf = xdbConns[0]->getWriteBuf();
     char *tbInbuf = xdbConns[0]->getWriteBuf();
 
