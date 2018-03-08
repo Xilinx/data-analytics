@@ -1,6 +1,6 @@
 KERNEL = fpga_q6
 
-XDEVICE=xilinx:adm-pcie-ku3:2ddr-xpr:3.3
+XDEVICE=xilinx:aws-vu9p-f1:4ddr-xpr-2pr:4.0
 DEVICE_REPO_OPT=
 
 KEEP_TEMP=1

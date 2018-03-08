@@ -49,7 +49,7 @@ else ifeq (${XPART},AWS)
 	XDEVICE=xilinx:aws-vu9p-f1:4ddr-xpr-2pr:4.0
 endif
 # HOST_DEBUG compilation DBG or OPT
-HOST_CCOPT = DBG
+HOST_CCOPT = OPT
 
 # Location for src, obj, bin, xclbin dires
 SRCDIR   = src
