@@ -86,10 +86,28 @@ Start by launching two terminals
     ```
 10. Turn on timing and rerun query 6 to see the runtime
     ```
-    tpch_1g=# \timing
+    tpch_1g=# \timing on
     tpch_1g=# \i queries/6.sql
+    Time: 1086.218 ms
+    tpch_1g=# \timing off
     ```
-    
+11. Run TPCH Query 12
+    ```
+    tpch_1g=# \i queries/12.sql
+     l_shipmode | high_line_count | low_line_count 
+    ------------+-----------------+----------------
+     MAIL       |            6252 |           9376
+     SHIP       |            6262 |           9439
+    (2 rows)
+    ```
+
+12. Turn on timing and rerun query 12
+    ```
+    tpch_1g=# \timing on
+    tpch_1g=# \i queries/12.sql
+    Time: 1203.786 ms
+    tpch_1g=# \timing off
+    ```
     
 [here]: https://github.com/Xilinx/ML-Development-Stack-From-Xilinx/blob/master/launching_instance.md
 [Xilinx Data-Analytic Repo]: https://github.com/Xilinx/data-analytics/tree/master/xpg/host
