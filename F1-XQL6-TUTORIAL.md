@@ -1,4 +1,4 @@
-# Data Analytics XQL6 Tutorial
+# Data Analytics XQL6 Version 18.03.19 Tutorial
 
 ## Introduction
 This tutorial introduces how to use XQL6, a PostgreSQL based FPGA acceleration UDF in AWS EC2 F1 Instance. 

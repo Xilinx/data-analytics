@@ -1,4 +1,4 @@
-# Data Analytics XPGBolt Tutorial
+# Data Analytics XPGBolt Version 18.03.19 Tutorial
 
 ## Introduction
 This tutorial introduces how to launch and use XPGBolt, a PostgreSQL based FPGA accelerating library in AWS EC2 F1 Instance. 

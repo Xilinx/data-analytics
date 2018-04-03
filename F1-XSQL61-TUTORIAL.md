@@ -1,4 +1,4 @@
-# Data Analytics XSQL61 Tutorial
+# Data Analytics XSQL61 Version 18.03.19 Tutorial
 
 ## Introduction
 This tutorial runs TPCH query 6 and query 1 directly on text table file of database on an FPGA acceleration kernel in AWS EC2 F1 Instance. 
