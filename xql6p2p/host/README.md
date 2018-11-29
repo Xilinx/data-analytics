@@ -60,6 +60,10 @@ the P2P buffer and the SSD in O_DIRECT mode. The driver works from linux kernel
 version >= 4.8. The current XRT supports 4.4.
 
 Running query in P2P mode:
+1. Postgresql modifications
+Please see 'Readme.pgmods.txt' before proceeding further.
+
+2.
 Follow the same steps to run the P2P xql6 queries as the non-P2P except that
 the query now takes a board Id as argument which should be 0 for single board
 setups. For example:

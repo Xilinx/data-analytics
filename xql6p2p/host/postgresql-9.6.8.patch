@@ -1,0 +1,271 @@
+diff -ru postgresql-9.6.8.orig/src/backend/storage/smgr/md.c postgresql-9.6.8/src/backend/storage/smgr/md.c
+--- postgresql-9.6.8.orig/src/backend/storage/smgr/md.c	2018-02-27 03:43:40.000000000 +0530
++++ postgresql-9.6.8/src/backend/storage/smgr/md.c	2018-04-29 20:10:24.849287125 +0530
+@@ -185,7 +185,7 @@
+ /* local routines */
+ static void mdunlinkfork(RelFileNodeBackend rnode, ForkNumber forkNum,
+ 			 bool isRedo);
+-static MdfdVec *mdopen(SMgrRelation reln, ForkNumber forknum, int behavior);
++MdfdVec *mdopen(SMgrRelation reln, ForkNumber forknum, int behavior, int isdirect);
+ static void register_dirty_segment(SMgrRelation reln, ForkNumber forknum,
+ 					   MdfdVec *seg);
+ static void register_unlink(RelFileNodeBackend rnode);
+@@ -195,7 +195,7 @@
+ static MdfdVec *_mdfd_openseg(SMgrRelation reln, ForkNumber forkno,
+ 			  BlockNumber segno, int oflags);
+ static MdfdVec *_mdfd_getseg(SMgrRelation reln, ForkNumber forkno,
+-			 BlockNumber blkno, bool skipFsync, int behavior);
++			 BlockNumber blkno, bool skipFsync, int behavior, int isdirect);
+ static BlockNumber _mdnblocks(SMgrRelation reln, ForkNumber forknum,
+ 		   MdfdVec *seg);
+ 
+@@ -275,7 +275,7 @@
+  * Note: this will return true for lingering files, with pending deletions
+  */
+ bool
+-mdexists(SMgrRelation reln, ForkNumber forkNum)
++mdexists(SMgrRelation reln, ForkNumber forkNum, int isdirect)
+ {
+ 	/*
+ 	 * Close it first, to ensure that we notice if the fork has been unlinked
+@@ -283,7 +283,7 @@
+ 	 */
+ 	mdclose(reln, forkNum);
+ 
+-	return (mdopen(reln, forkNum, EXTENSION_RETURN_NULL) != NULL);
++	return (mdopen(reln, forkNum, EXTENSION_RETURN_NULL, isdirect) != NULL);
+ }
+ 
+ /*
+@@ -517,7 +517,7 @@
+ 						relpath(reln->smgr_rnode, forknum),
+ 						InvalidBlockNumber)));
+ 
+-	v = _mdfd_getseg(reln, forknum, blocknum, skipFsync, EXTENSION_CREATE);
++	v = _mdfd_getseg(reln, forknum, blocknum, skipFsync, EXTENSION_CREATE, 0);
+ 
+ 	seekpos = (off_t) BLCKSZ *(blocknum % ((BlockNumber) RELSEG_SIZE));
+ 
+@@ -571,8 +571,8 @@
+  * EXTENSION_CREATE means it's OK to extend an existing relation, not to
+  * invent one out of whole cloth.
+  */
+-static MdfdVec *
+-mdopen(SMgrRelation reln, ForkNumber forknum, int behavior)
++MdfdVec *
++mdopen(SMgrRelation reln, ForkNumber forknum, int behavior, int isdirect)
+ {
+ 	MdfdVec    *mdfd;
+ 	char	   *path;
+@@ -584,7 +584,11 @@
+ 
+ 	path = relpath(reln->smgr_rnode, forknum);
+ 
+-	fd = PathNameOpenFile(path, O_RDWR | PG_BINARY, 0600);
++	if (isdirect == 1) {
++		fd = PathNameOpenFile(path, O_DIRECT | O_RDWR | PG_BINARY, 0600);
++	} else {
++		fd = PathNameOpenFile(path, O_RDWR | PG_BINARY, 0600);
++	}
+ 
+ 	if (fd < 0)
+ 	{
+@@ -659,7 +663,7 @@
+ 	off_t		seekpos;
+ 	MdfdVec    *v;
+ 
+-	v = _mdfd_getseg(reln, forknum, blocknum, false, EXTENSION_FAIL);
++	v = _mdfd_getseg(reln, forknum, blocknum, false, EXTENSION_FAIL, 0);
+ 
+ 	seekpos = (off_t) BLCKSZ *(blocknum % ((BlockNumber) RELSEG_SIZE));
+ 
+@@ -692,7 +696,7 @@
+ 					segnum_end;
+ 
+ 		v = _mdfd_getseg(reln, forknum, blocknum, true /* not used */ ,
+-						 EXTENSION_RETURN_NULL);
++						 EXTENSION_RETURN_NULL, 0);
+ 
+ 		/*
+ 		 * We might be flushing buffers of already removed relations, that's
+@@ -739,7 +743,7 @@
+ 										reln->smgr_rnode.backend);
+ 
+ 	v = _mdfd_getseg(reln, forknum, blocknum, false,
+-					 EXTENSION_FAIL | EXTENSION_CREATE_RECOVERY);
++					 EXTENSION_FAIL | EXTENSION_CREATE_RECOVERY, 0);
+ 
+ 	seekpos = (off_t) BLCKSZ *(blocknum % ((BlockNumber) RELSEG_SIZE));
+ 
+@@ -789,6 +793,82 @@
+ }
+ 
+ /*
++ *	mdread() -- Read the specified blocks from a relation.
++ */
++size_t
++mdread_bigd(SMgrRelation reln, ForkNumber forknum, BlockNumber blocknum,
++	   BlockNumber nblks, char *buffer)
++{
++	off_t		seekpos;
++	int			nbytes;
++	MdfdVec    *v;
++	size_t	rdsz
++
++	TRACE_POSTGRESQL_SMGR_MD_READ_START(forknum, blocknum,
++										reln->smgr_rnode.node.spcNode,
++										reln->smgr_rnode.node.dbNode,
++										reln->smgr_rnode.node.relNode,
++										reln->smgr_rnode.backend);
++
++	v = _mdfd_getseg(reln, forknum, blocknum, false,
++					 EXTENSION_FAIL | EXTENSION_CREATE_RECOVERY, 1);
++
++	seekpos = (off_t) BLCKSZ *(blocknum % ((BlockNumber) RELSEG_SIZE));
++
++	Assert(seekpos < (off_t) BLCKSZ * RELSEG_SIZE);
++
++	if (FileSeek(v->mdfd_vfd, seekpos, SEEK_SET) != seekpos)
++		ereport(ERROR,
++				(errcode_for_file_access(),
++				 errmsg("could not seek to block %u in file \"%s\": %m",
++						blocknum, FilePathName(v->mdfd_vfd))));
++
++	if (nblks) {
++		rdsz = nblks * BLCKSZ;
++	} else {
++		rdsz = BLCKSZ;
++	}
++	nbytes = FileRead(v->mdfd_vfd, buffer, rdsz);
++
++	TRACE_POSTGRESQL_SMGR_MD_READ_DONE(forknum, blocknum,
++									   reln->smgr_rnode.node.spcNode,
++									   reln->smgr_rnode.node.dbNode,
++									   reln->smgr_rnode.node.relNode,
++									   reln->smgr_rnode.backend,
++									   nbytes,
++									   BLCKSZ);
++
++#if 0
++	if (nbytes != rdsz)
++	{
++		if (nbytes < 0)
++			ereport(ERROR,
++					(errcode_for_file_access(),
++					 errmsg("could not read block %u in file \"%s\": %m",
++							blocknum, FilePathName(v->mdfd_vfd))));
++
++		/*
++		 * Short read: we are at or past EOF, or we read a partial block at
++		 * EOF.  Normally this is an error; upper levels should never try to
++		 * read a nonexistent block.  However, if zero_damaged_pages is ON or
++		 * we are InRecovery, we should instead return zeroes without
++		 * complaining.  This allows, for example, the case of trying to
++		 * update a block that was later truncated away.
++		 */
++		if (zero_damaged_pages || InRecovery)
++			MemSet(buffer, 0, BLCKSZ);
++		else
++			ereport(ERROR,
++					(errcode(ERRCODE_DATA_CORRUPTED),
++					 errmsg("could not read block %u in file \"%s\": read only %d of %d bytes",
++							blocknum, FilePathName(v->mdfd_vfd),
++							nbytes, BLCKSZ)));
++	}
++#endif
++	return nbytes;
++}
++
++/*
+  *	mdwrite() -- Write the supplied block at the appropriate location.
+  *
+  *		This is to be used only for updating already-existing blocks of a
+@@ -815,7 +895,7 @@
+ 										 reln->smgr_rnode.backend);
+ 
+ 	v = _mdfd_getseg(reln, forknum, blocknum, skipFsync,
+-					 EXTENSION_FAIL | EXTENSION_CREATE_RECOVERY);
++					 EXTENSION_FAIL | EXTENSION_CREATE_RECOVERY, 0);
+ 
+ 	seekpos = (off_t) BLCKSZ *(blocknum % ((BlockNumber) RELSEG_SIZE));
+ 
+@@ -869,7 +949,7 @@
+ BlockNumber
+ mdnblocks(SMgrRelation reln, ForkNumber forknum)
+ {
+-	MdfdVec    *v = mdopen(reln, forknum, EXTENSION_FAIL);
++	MdfdVec    *v = mdopen(reln, forknum, EXTENSION_FAIL, 0);
+ 	BlockNumber nblocks;
+ 	BlockNumber segno = 0;
+ 
+@@ -951,7 +1031,7 @@
+ 	if (nblocks == curnblk)
+ 		return;					/* no work */
+ 
+-	v = mdopen(reln, forknum, EXTENSION_FAIL);
++	v = mdopen(reln, forknum, EXTENSION_FAIL, 0);
+ 
+ 	priorblocks = 0;
+ 	while (v != NULL)
+@@ -1031,7 +1111,7 @@
+ 	 */
+ 	mdnblocks(reln, forknum);
+ 
+-	v = mdopen(reln, forknum, EXTENSION_FAIL);
++	v = mdopen(reln, forknum, EXTENSION_FAIL, 0);
+ 
+ 	while (v != NULL)
+ 	{
+@@ -1225,7 +1305,7 @@
+ 							 (BlockNumber) segno * (BlockNumber) RELSEG_SIZE,
+ 									   false,
+ 									   EXTENSION_RETURN_NULL
+-									   | EXTENSION_DONT_CHECK_SIZE);
++									   | EXTENSION_DONT_CHECK_SIZE, 0);
+ 
+ 					INSTR_TIME_SET_CURRENT(sync_start);
+ 
+@@ -1779,9 +1859,9 @@
+  */
+ static MdfdVec *
+ _mdfd_getseg(SMgrRelation reln, ForkNumber forknum, BlockNumber blkno,
+-			 bool skipFsync, int behavior)
++			 bool skipFsync, int behavior, int isdirect)
+ {
+-	MdfdVec    *v = mdopen(reln, forknum, behavior);
++	MdfdVec    *v = mdopen(reln, forknum, behavior, isdirect);
+ 	BlockNumber targetseg;
+ 	BlockNumber nextsegno;
+ 
+@@ -1801,6 +1881,10 @@
+ 		{
+ 			BlockNumber nblocks = _mdnblocks(reln, forknum, v);
+ 			int			flags = 0;
++			
++			if (isdirect) {
++				flags |= O_DIRECT;
++			}
+ 
+ 			if (nblocks > ((BlockNumber) RELSEG_SIZE))
+ 				elog(FATAL, "segment too big");
+diff -ru postgresql-9.6.8.orig/src/include/storage/smgr.h postgresql-9.6.8/src/include/storage/smgr.h
+--- postgresql-9.6.8.orig/src/include/storage/smgr.h	2018-02-27 03:43:40.000000000 +0530
++++ postgresql-9.6.8/src/include/storage/smgr.h	2018-04-05 02:24:16.044111753 +0530
+@@ -114,7 +114,7 @@
+ extern void mdinit(void);
+ extern void mdclose(SMgrRelation reln, ForkNumber forknum);
+ extern void mdcreate(SMgrRelation reln, ForkNumber forknum, bool isRedo);
+-extern bool mdexists(SMgrRelation reln, ForkNumber forknum);
++extern bool mdexists(SMgrRelation reln, ForkNumber forknum, int isdirect);
+ extern void mdunlink(RelFileNodeBackend rnode, ForkNumber forknum, bool isRedo);
+ extern void mdextend(SMgrRelation reln, ForkNumber forknum,
+ 		 BlockNumber blocknum, char *buffer, bool skipFsync);
+@@ -122,6 +122,8 @@
+ 		   BlockNumber blocknum);
+ extern void mdread(SMgrRelation reln, ForkNumber forknum, BlockNumber blocknum,
+ 	   char *buffer);
++extern size_t mdread_bigd(SMgrRelation reln, ForkNumber forknum, BlockNumber blocknum,
++	   BlockNumber nblks, char *buffer);
+ extern void mdwrite(SMgrRelation reln, ForkNumber forknum,
+ 		BlockNumber blocknum, char *buffer, bool skipFsync);
+ extern void mdwriteback(SMgrRelation reln, ForkNumber forknum,
