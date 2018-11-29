@@ -36,6 +36,30 @@ make
 sudo cp xql.so /usr/lib/postgresql/9.6/lib/.
 
 P2P
+Building the xql6 host:
+
+O_DIRECT:
+For P2P, it is necessary that the data transfer between the FPGA P2P buffer
+and the SSD happen in O_DIRECT mode. For this the postgresql needed to be
+modified a bit to make the table opens happen in the O_DIRECT mode.
+The modification is to temporarily change the mdexists declaration
+in the /usr/include/postgresql/9.6/server/storage/smgr.h file (pls save the original):
+
+from:
+extern bool mdexists(SMgrRelation reln, ForkNumber forknum);
+to
+extern bool mdexists(SMgrRelation reln, ForkNumber forknum, int isdirect);
+
+This should not affect the system if no other application is compiling using the
+postgresql headers.
+
+Transparent O_DIRECT handling:
+In order to avoid modifcations to the base applications (ex. postgresql in this case)
+there is a kernel driver which can transparently make the reads and writes between
+the P2P buffer and the SSD in O_DIRECT mode. The driver works from linux kernel
+version >= 4.8. The current XRT supports 4.4.
+
+Running query in P2P mode:
 Follow the same steps to run the P2P xql6 queries as the non-P2P except that
 the query now takes a board Id as argument which should be 0 for single board
 setups. For example:
