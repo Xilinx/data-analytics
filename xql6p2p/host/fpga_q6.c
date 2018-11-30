@@ -121,13 +121,7 @@ int end_fpga() {
 int fpga_q6_enq_compute (int bufId)
 {
   if (0) hlog ("fpga_q6_enq_compute bufId %d start...\n", bufId);
-
-  int err = clEnqueueMigrateMemObjects (gcommands, 1, &devInp[bufId], 0, 0, NULL, &wrEvent[bufId]);
-  if (err != CL_SUCCESS) {
-    hlog("ERROR: Failed to write to devInp[%d]. Status %d!\n", bufId, err);
-    return EXIT_FAILURE;
-  }
-  if (0) hlog ("fpga_q6_enq_compute clEnqueueWriteBuffer\n");
+  int err;
 
   err  = clSetKernelArg(gkernel, 0, sizeof(cl_mem), &devInp[bufId]);
   err |= clSetKernelArg(gkernel, 1, sizeof(cl_mem), &devOut[bufId]);
