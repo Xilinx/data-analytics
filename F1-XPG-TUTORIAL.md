@@ -3,9 +3,11 @@
 ## Introduction
 This tutorial introduces how to launch and use XPGBolt, a PostgreSQL based FPGA accelerating library in AWS EC2 F1 Instance. 
 
-The source code of XPGBolt can be found at [Xilinx Data-Analytic Repo]
-
 The instruction to launch an F1 instance can be found [here]
+
+XPG Amazon AWS AMI can be found at [AWS Data Analytics Acceleration Stack using Postgres] page
+
+The source code of XPG is available upon request to Xilinx customer support.
 
 ## Steps to Launch XPGBolt
 
@@ -188,8 +190,6 @@ Start by launching two terminals. The purpose for the first terminal is to launc
     tpch_1g=# \timing off
     ```
     
-[here]: https://github.com/Xilinx/ML-Development-Stack-From-Xilinx/blob/master/launching_instance.md
-[Xilinx Data-Analytic Repo]: https://github.com/Xilinx/data-analytics/tree/master/xpg/host
+[here]: https://github.com/Xilinx/SDAccel_Examples/wiki/Create,-configure-and-test-an-AWS-F1-instance
+[AWS Data Analytics Acceleration Stack using Postgres]: https://aws.amazon.com/marketplace/pp/B07BVSZL51
 [TPC-H Homepage]: http://www.tpc.org/tpch/
-
-
