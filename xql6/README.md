@@ -3,8 +3,9 @@ Xilinx End-2-End PostgreSQL Acceleration for TPC-H Query-6
 
 This README file contains the following sections:
   1. OVERVIEW
-  2. DESIGN FILE HIERARCHY  
-  3. COMPILATION AND EXECUTION
+  2. DESIGN FILE HIERARCHY 
+  3. SOFTWARE AND SYSTEM REQUIREMENTS 
+  4. COMPILATION AND EXECUTION
 
 ## 1. OVERVIEW
 XQL6 is an FPGA accelerated implementation of Query-6 from the TPC-H benchmarks for PostgreSQL 9.6. It has a host component which extends Postgres via a C-UDF (C - User Defined Function), and an FPGA component that accelerates scan + aggregate of Query-6. This project is presented as a technology demo for end-to-end database acceleration.
@@ -24,13 +25,22 @@ The UDF requests native storage pages from PostgreSQL, extracts the tuples and r
 ## 2. DESIGN FILE HIERARCHY
 The code is made available in two seperate directories, one for the host component and the other for the FPGA kernel.
 
-Files     | Description
-----------|----------------------------------------------------------------------------
-host/     | Source files for Host component
-kernel/   | Source files for FPGA Kernel (HLS) component
-README.md | Readme file
+Files           | Description
+----------------|----------------------------------------------------------------------------
+host/           | Source files for Host component
+kernel/         | Source files for FPGA Kernel (HLS) component
+Tutorial/       | Tutorials for executing on specific host systems
+host/binaries/  | The binary for target host systems
+xclbin /        | The xclbin for target devices
+README.md       | Readme file
 
-## 3. COMPILATION AND EXECUTION
+## 3. SOFTWARE AND SYSTEM REQUIREMENTS
+
+         Board       |                 Device Name               |    Software Version
+---------------------|-------------------------------------------|-------------------------------------
+AWS F1 Custom Board  | xilinx_aws-vu9p-f1-04261818_dynamic_5_0   |    Xilinx SDx 2018.2 (AMV v1.5.x)
+
+## 4. COMPILATION AND EXECUTION
 PostgreSQL 9.6 server loaded with TPC-H data, is required to execute the Query-6 UDF. To compile host-code, PostgreSQL 9.6 development libraries are needed. Please refer to your operating system instructions to install these libraries.
 
 ```
@@ -65,7 +75,6 @@ cd kernel
 mkdir run1; cd run1; cp ../makefile .
 make xbin
 ```
-For Amazon F1, copy the kernel binary (\*.xclbin), to your F1 instance and follow the directions to get an AFI.
 
 ### 3.3 PostgreSQL Configuration
 Add LD\_LIBRARY\_PATH and XILINX\_SDX to /etc/postgresql/9.6/main/environment. This is to ensure that the C-UDF can see the Xilinx shared libraries during execution from within the PostgreSQL environment.

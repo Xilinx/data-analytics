@@ -1,7 +1,10 @@
-XILINX_SDX=/proj/xbuilds/2017.1_sdx_1026_1/installs/lin64/SDx/2017.1/
 #XILINX_SDX=/opt/Xilinx/SDx/2017.1.rte/
 CC = gcc
 PG_SERVER_INCS += -I $(shell pg_config --includedir) -I $(shell pg_config --includedir-server)
+#####################
+### FOR REFERENCE ###
+#####################
+#PG_SERVER_INCS += -I ../../postgresql/9.6/server -I ../../postgresql/internal
 CFLAGS += -O3 -fpic $(PG_SERVER_INCS)  -I${XILINX_SDX}/runtime/include/1_2
 
 LDFLAGS = -O3 -shared -L${XILINX_SDX}/runtime/lib/x86_64 -L${XILINX_SDX}/lib/lnx64.o  -Wl,-rpath,${XILINX_SDX}/lib/lnx64.o -lrt -lm -ldl -lxilinxopencl -lz

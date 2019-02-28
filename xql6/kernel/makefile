@@ -1,13 +1,14 @@
 KERNEL = fpga_q6
 
-XDEVICE=xilinx:aws-vu9p-f1:4ddr-xpr-2pr:4.0
+#XDEVICE=xilinx:aws-vu9p-f1:4ddr-xpr-2pr:4.0
+XDEVICE=/home/centos/aws-fpga/SDAccel/aws_platform/xilinx_aws-vu9p-f1-04261818_dynamic_5_0/xilinx_aws-vu9p-f1-04261818_dynamic_5_0.xpfm
 DEVICE_REPO_OPT=
 
 KEEP_TEMP=1
 KERNEL_DEBUG=1
 CC = g++
 CLCC = xocc
-CLCC_OPT =  -t ${FLOW} --include ./ -s --xdevice ${XDEVICE} ${DEVICE_REPO_OPT} --xp param:compiler.enableAutoPipelining=false -O0
+CLCC_OPT =  -t ${FLOW} --include ./ -s -f ${XDEVICE} ${DEVICE_REPO_OPT} --xp param:compiler.enableAutoPipelining=false -O0
 KERNEL_OBJ = ${KERNEL}.xo
 
 XCLBIN = ${KERNEL}.xclbin
