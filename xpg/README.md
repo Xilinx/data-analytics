@@ -34,11 +34,11 @@ Tutorial/    | Tutorials for executing on specific host systems
 host/        | The binary for target host systems
 xclbin/      | The xclbin for target devices
 
-## 2. SOFTWARE AND SYSTEM REQUIREMENTS
+## 3. SOFTWARE AND SYSTEM REQUIREMENTS
 
-         Board       |                 Device Name               |    Software Version
----------------------|-------------------------------------------|-------------------------------------
-AWS F1 Custom Board  | xilinx_aws-vu9p-f1-04261818_dynamic_5_0   |    Xilinx SDx 2018.2 (AMV v1.5.x)
+|         Board       |                 Device Name               |    Software Version |
+|---------------------|-------------------------------------------|-------------------------------------|
+|AWS F1 Custom Board  | xilinx_aws-vu9p-f1-04261818_dynamic_5_0   |    Xilinx SDx 2018.2 (AMV v1.5.x)|
 
 ## 4. EXECUTION
 
