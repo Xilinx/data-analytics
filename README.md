@@ -49,8 +49,10 @@ Each directory contains a makefile to build host code, library and Xilinx Kernel
 Directory    | Description
 -------------|----------------------------------------------------------------------------
 postgresql   | Postgres internals (for reference)
+tb_data      | Testbench Data
 xpg          | Postgres integrated TPCH Query Acceleration host code
 xql6         | Postgres integrated TPCH Query 6 Acceleration
+xql6p2p         | Postgres integrated TPCH Query 6 Acceleration with Peer-to-Peer (P2P) support
 
 ## 4. OTHER INFORMATION
 
