@@ -17,10 +17,10 @@ This library is precompiled for target system using GCC: GCC: (Ubuntu 5.4.0-6ubu
 
 ### Library Compatibility:
  1. Version: 1  File: librt.so.1  Cnt: 1
-   ⋅⋅* Name: GLIBC_2.2.5  Flags: none  Version: 6
+   * Name: GLIBC_2.2.5  Flags: none  Version: 6
  2. Version: 1  File: libc.so.6  Cnt: 4
-   ⋅⋅* Name: GLIBC_2.14  Flags: none  Version: 5
-   ⋅⋅* Name: GLIBC_2.4  Flags: none  Version: 4
-   ⋅⋅* Name: GLIBC_2.3.4  Flags: none  Version: 3
-   ⋅⋅* Name: GLIBC_2.2.5  Flags: none  Version: 2
+   * Name: GLIBC_2.14  Flags: none  Version: 5
+   * Name: GLIBC_2.4  Flags: none  Version: 4
+   * Name: GLIBC_2.3.4  Flags: none  Version: 3
+   * Name: GLIBC_2.2.5  Flags: none  Version: 2
 

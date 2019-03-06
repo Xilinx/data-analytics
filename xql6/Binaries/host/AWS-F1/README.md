@@ -20,6 +20,6 @@ This library is precompiled for target system using GCC: (GNU) 4.4.7 20120313 (R
 
 ### Library Compatibility:
  1. Version: 1  File: librt.so.1  Cnt: 1
-   ⋅⋅* Name: GLIBC_2.2.5  Flags: none  Version: 3
+   * Name: GLIBC_2.2.5  Flags: none  Version: 3
  2. Version: 1  File: libc.so.6  Cnt: 1
-   ⋅⋅* Name: GLIBC_2.2.5  Flags: none  Version: 2
+   * Name: GLIBC_2.2.5  Flags: none  Version: 2
