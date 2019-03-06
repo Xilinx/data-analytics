@@ -7,7 +7,7 @@ This file details the installation of the TPC-H tables in PostgreSQL.
 2. INSTALLATION
 
 ## 1. PREREQUISITES
-PostgreSQL must be installed. A server must be running and a client must be connected.
+PostgreSQL must be installed with a server running.
 
 ## 2. INSTALLATION
 
