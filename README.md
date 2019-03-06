@@ -50,7 +50,7 @@ Directory    | Description
 -------------|----------------------------------------------------------------------------
 postgresql   | Postgres internals (for reference)
 xpg          | Postgres integrated TPCH Query Acceleration host code
-xsql6        | Postgres integrated TPCH Query 6 Acceleration
+xql6         | Postgres integrated TPCH Query 6 Acceleration
 
 ## 4. OTHER INFORMATION
 

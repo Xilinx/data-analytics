@@ -8,7 +8,7 @@ This README file contains the following sections:
   4. EXECUTION
 
 ## 1. OVERVIEW
-This library provides full end-to-end support for Postgres Acceleration for Scan using postgres native hooks. The library interacts with Native Postgres hooks, decides whether scan can be offloaded to FPGA, and take care of offloading scan operation to FPGA and sends the Scan result back to Postgres server for rest of the operations in the query. There are three main phases FPGA Offload Feasibility, FPGA Codegen, Data Mover, FPGA Offload, and Data Receiver. 
+This library provides full end-to-end support for Postgres Acceleration for Scan using postgres native hooks. The library interacts with Native Postgres hooks, decides whether scan can be offloaded to FPGA, and take care of offloading scan operation to FPGA and sends the Scan result back to Postgres server for rest of the operations in the query. There are three main phases FPGA Offload Feasibility, FPGA Codegen, Data Mover, FPGA Offload, and Data Receiver.
 
 ### 1.1 FPGA Offload Feasibility
 This is the first phase where decision is made to make a FPGA offload call. The decision is made based on Kernel resource feasibility, Kernel operator support, Kernel Data Type support, and Cost function. Kernel implemention has some limits set to number of expressions that can be offloaded, depth of expression tree, the type of operations, and supported datatypes. If all the checks are satisfied, then FPGA offload call will be active. Currently only Scan operation is supported.
@@ -30,15 +30,16 @@ Post FPGA offload call, the data is received from FPGA and native tuples are con
 
 Directory    | Description
 -------------|----------------------------------------------------------------------------
+Binaries/    | The binary for target host systems, and the xclbin for target devices
 Tutorial/    | Tutorials for executing on specific host systems
-host/        | The binary for target host systems
-xclbin/      | The xclbin for target devices
+README.md       | Readme file
 
 ## 3. SOFTWARE AND SYSTEM REQUIREMENTS
 
 |         Board       |                 Device Name               |    Software Version |
 |---------------------|-------------------------------------------|-------------------------------------|
 |AWS F1 Custom Board  | xilinx_aws-vu9p-f1-04261818_dynamic_5_0   |    Xilinx SDx 2018.2 (AMV v1.5.x)|
+|Xilinx Alveo U200   | xilinx_xdma_201820_1  |    2018.2_XDF |
 
 ## 4. EXECUTION
 

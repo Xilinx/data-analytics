@@ -29,9 +29,8 @@ Files           | Description
 ----------------|----------------------------------------------------------------------------
 host/           | Source files for Host component
 kernel/         | Source files for FPGA Kernel (HLS) component
+Binaries/       | The binary for target host systems, and the xclbin for target devices
 Tutorial/       | Tutorials for executing on specific host systems
-host/binaries/  | The binary for target host systems
-xclbin /        | The xclbin for target devices
 README.md       | Readme file
 
 ## 3. SOFTWARE AND SYSTEM REQUIREMENTS
@@ -39,6 +38,7 @@ README.md       | Readme file
 |         Board       |                 Device Name               |    Software Version |
 |---------------------|-------------------------------------------|-------------------------------------|
 |AWS F1 Custom Board  | xilinx_aws-vu9p-f1-04261818_dynamic_5_0   |    Xilinx SDx 2018.2 (AMV v1.5.x)|
+|Xilinx Alveo U200   | xilinx_xdma_201820_1  |    2018.2_XDF |
 
 ## 4. COMPILATION AND EXECUTION
 PostgreSQL 9.6 server loaded with TPC-H data, is required to execute the Query-6 UDF. To compile host-code, PostgreSQL 9.6 development libraries are needed. Please refer to your operating system instructions to install these libraries.
