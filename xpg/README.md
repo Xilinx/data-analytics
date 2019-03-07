@@ -39,7 +39,7 @@ README.md       | Readme file
 |         Board       |                 Device Name               |    Software Version |
 |---------------------|-------------------------------------------|-------------------------------------|
 |AWS F1 Custom Board  | xilinx_aws-vu9p-f1-04261818_dynamic_5_0   |    Xilinx SDx 2018.2 (AMV v1.5.x)|
-|Xilinx Alveo U200   | xilinx_xdma_201820_1  |    2018.2_XDF |
+|Xilinx Alveo U200   | xilinx_xdma_201830_1  |    2018.3 |
 
 ## 4. EXECUTION
 

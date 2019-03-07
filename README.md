@@ -30,12 +30,19 @@ It accelerates Query 6 integrated within Postgres as a UDF (User Defined Functio
 
 Refer to [xql6/README.md](https://github.com/Xilinx/data-analytics/blob/master/xql6/README.md) to learn more about this acceleration.
 
+### xql6p2p
+
+It accelerates Query 6 integrated within Postgres as a UDF (User Defined Functions) suing Peer-to-Peer (P2P). It sends Postgres pages from a NVMe storage device to the FPGA. An array of Query 6 processors process this native data to produce Query 6 results.
+
+Refer to [xql6p2p/README.md](https://github.com/Xilinx/data-analytics/blob/master/xql6p2p/README.md) to learn more about this acceleration.
+
 The following table summarizes PROJECTS and ACCELERATION MODULES associated with their respective supported release. The release support refers to the repository branch. The current supported release is 2018.2.
 
 PROJECTS and ACCELERATION MODULES  | Release Support
 -----------------------------------|------------------
-XPG                                | 2018.2, 2017.1
-XQL6                               | 2018.2, 2017.1
+XQL6P2P                            | 2018.3
+XPG                                | 2018.3, 2018.2, 2017.1
+XQL6                               | 2018.3, 2018.2, 2017.1
 XSQL61                             | 2017.1
 XDBCONN                            | 2017.1
 XSQLUTILS                          | 2017.1
@@ -52,6 +59,7 @@ postgresql   | Postgres internals (for reference)
 tb_data      | Testbench Data
 xpg          | Postgres integrated TPCH Query Acceleration host code
 xql6         | Postgres integrated TPCH Query 6 Acceleration
+xql6p2p      | Postgres integrated TPCH Query 6 Acceleration with Peer-to-Peer (P2P) support
 
 ## 4. OTHER INFORMATION
 
@@ -67,5 +75,6 @@ Date    | Readme Version | Revision Description
 --------|----------------|-------------------------
 OCT2017 | 1.0            | Initial Xilinx release
 Mar2019 | 2.0            | Upgrade to SDx 2018.2 release
+Mar2019 | 3.0            | Upgrade to SDx 2018.3 release
 
 
