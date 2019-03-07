@@ -36,7 +36,6 @@ PROJECTS and ACCELERATION MODULES  | Release Support
 -----------------------------------|------------------
 XPG                                | 2018.2, 2017.1
 XQL6                               | 2018.2, 2017.1
-XQL6P2P                            | 2018.2
 XSQL61                             | 2017.1
 XDBCONN                            | 2017.1
 XSQLUTILS                          | 2017.1
@@ -53,7 +52,6 @@ postgresql   | Postgres internals (for reference)
 tb_data      | Testbench Data
 xpg          | Postgres integrated TPCH Query Acceleration host code
 xql6         | Postgres integrated TPCH Query 6 Acceleration
-xql6p2p      | Postgres integrated TPCH Query 6 Acceleration with Peer-to-Peer (P2P) support
 
 ## 4. OTHER INFORMATION
 
