@@ -32,7 +32,7 @@ Refer to [xql6/README.md](https://github.com/Xilinx/data-analytics/blob/master/x
 
 ### xql6p2p
 
-It accelerates Query 6 integrated within Postgres as a UDF (User Defined Functions) suing Peer-to-Peer (P2P). It sends Postgres pages from a NVMe storage device to the FPGA. An array of Query 6 processors process this native data to produce Query 6 results.
+It accelerates Query 6 integrated within Postgres as a UDF (User Defined Functions) using Peer-to-Peer (P2P). It sends Postgres pages from a NVMe storage device to the FPGA. An array of Query 6 processors process this native data to produce Query 6 results.
 
 Refer to [xql6p2p/README.md](https://github.com/Xilinx/data-analytics/blob/master/xql6p2p/README.md) to learn more about this acceleration.
 
