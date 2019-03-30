@@ -36,6 +36,13 @@ It accelerates Query 6 integrated within Postgres as a UDF (User Defined Functio
 
 Refer to [xql6p2p/README.md](https://github.com/Xilinx/data-analytics/blob/master/xql6p2p/README.md) to learn more about this acceleration.
 
+### omxgather
+
+It accelerates gather function that can be used as an example design to show case HBM performance for random access across HBM pseudo channels using interleaving.
+
+Refer to [omxgather/README.md](https://github.com/Xilinx/data-analytics/blob/master/omxgather/README.md) to learn more about this acceleration.
+
+
 The following table summarizes PROJECTS and ACCELERATION MODULES associated with their respective supported release. The release support refers to the repository branch. The current supported release is 2018.2.
 
 PROJECTS and ACCELERATION MODULES  | Release Support
@@ -46,6 +53,7 @@ XQL6                               | 2018.3, 2018.2, 2017.1
 XSQL61                             | 2017.1
 XDBCONN                            | 2017.1
 XSQLUTILS                          | 2017.1
+OMXGATHER                          | 2018.3
 
 ## 3. DIRECTORY STRUCTURE
 
@@ -60,6 +68,7 @@ tb_data      | Testbench Data
 xpg          | Postgres integrated TPCH Query Acceleration host code
 xql6         | Postgres integrated TPCH Query 6 Acceleration
 xql6p2p      | Postgres integrated TPCH Query 6 Acceleration with Peer-to-Peer (P2P) support
+omxgather    | gather design for random access across HBM channels using interleaving 
 
 ## 4. OTHER INFORMATION
 
