@@ -1,4 +1,4 @@
-Xilinx Database Acceleration for Oracle
+Xilinx Database Acceleration
 ==========================================
 
 This README file contains the following sections:
