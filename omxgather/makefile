@@ -17,7 +17,7 @@ ifndef XILINX_SDX
 endif
 
 ifndef USER_SCRIPT_PATH
-  $(error USER_SCRIPT_PATH variable is not set)
+  $(error USER_SCRIPT_PATH variable is not set. should set to full path of script)
 endif
 
 CWD = ${PWD}
