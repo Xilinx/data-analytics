@@ -13,9 +13,11 @@
 # under the License.
 
 ifndef XILINX_SDX
-all:
-	@echo "Must define XILINX_SDX variable to a valid Xilinx SDx installation"
-	exit 0
+  $(error Must define XILINX_SDX variable to a valid Xilinx SDx installation)
+endif
+
+ifndef USER_SCRIPT_PATH
+  $(error USER_SCRIPT_PATH variable is not set)
 endif
 
 CWD = ${PWD}
@@ -137,7 +139,7 @@ CLCC_OPT +=--sp omx.inbuf0:HBM[16] \
 
 
 
-CLCC_OPT  += --xp param:compiler.userPostSysLinkTcl=./scripts/user_tcl_file.tcl
+CLCC_OPT  += --xp param:compiler.userPostSysLinkTcl=${USER_SCRIPT_PATH}/user_tcl_file.tcl
 
 
 

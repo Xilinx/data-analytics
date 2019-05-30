@@ -27,16 +27,13 @@ src/main.cpp              | Host code with main function
 src/oclaccel.cpp          | For host code
 kernel/omx.cpp            | Kernel top level
 kernel/gather.cpp         | Kernel sub-function Gather
-
+scripts/user_tcl_file.tcl | script used to insert RAMA IP
 
 
 ## 3. COMPILATION AND EXECUTION
 ### Before Compiling
 
-In makefile, in current release(2018.3), you need to update the user_tcl_file.tcl path to the full path in your working environment intead of relative path: 
- Line need to update in makefile is as follows:
-   --xp param:compiler.userPostSysLinkTcl=[full_path]/scripts/user_tcl_file.tcl
-
+Set variable USER_SCRIPT_PATH to full path folder of user_tcl_file.tcl
 
 Set up environment for Xilinx SDx release
 ```
